@@ -11,7 +11,7 @@ const obstacleMaterial = new THREE.MeshStandardMaterial( { color:"orangered"} )
 const wall = new THREE.MeshStandardMaterial( { color:"slategrey"} )
 const blockWall = new THREE.MeshStandardMaterial( { color:"gray"} )
 
-export function Spawn( { position = [ 0, 0, 0 ]} )
+ function Spawn( { position = [ 0, 0, 0 ]} )
 {
     return <group position={ position }>
                 <mesh geometry={ cube } material={ floorSpawn } position={ [0, - 0.1, 0] } scale={ [8, 0.2, 8] } receiveShadow  />
@@ -19,7 +19,7 @@ export function Spawn( { position = [ 0, 0, 0 ]} )
 
 } 
 
-export function SpikeTrap( { position = [ 0, 0, 0 ]} )
+ function SpikeTrap( { position = [ 0, 0, 0 ]} )
 {
 
     const obstacle = useRef();
@@ -48,7 +48,7 @@ export function SpikeTrap( { position = [ 0, 0, 0 ]} )
 
 }
 
-export function TranslationSpike( { position = [ 0, 0, 0 ]} )
+ function TranslationSpike( { position = [ 0, 0, 0 ]} )
 {
 
     const obstacle = useRef();
@@ -75,7 +75,7 @@ export function TranslationSpike( { position = [ 0, 0, 0 ]} )
             </group>
 }
 
-export function Parkour( { position = [ 0, 0, 0 ]} )
+ function Parkour( { position = [ 0, 0, 0 ]} )
 {
 
     const randomBlockPosition = () => (Math.random() + 0.2) * (Math.random() < 0.5 ? -0.8 : 0.4);
@@ -115,7 +115,7 @@ export function Parkour( { position = [ 0, 0, 0 ]} )
             </group>
 }
 
-export function TranslationAxe( { position = [ 0, 0, 0 ]} )
+function TranslationAxe( { position = [ 0, 0, 0 ]} )
 {
 
     const obstacle = useRef();
@@ -138,12 +138,12 @@ export function TranslationAxe( { position = [ 0, 0, 0 ]} )
             <RigidBody ref={ obstacle } type='kinematicPosition'position={ [0, 0.3, 0] }>
                 <mesh geometry={ cube } material={ obstacleMaterial }  scale={ [ 3, 1.5, 0.3 ] } receiveShadow />
             </RigidBody>
-
+ 
             </group>
 
 }
 
-export function End( { position = [ 0, 0, 0 ]} )
+function End( { position = [ 0, 0, 0 ]} )
 {
     return <group position={ position }>
                 <mesh geometry={ cube } material={ floor } position={ [0, - 0.1, 0] } scale={ [8, 0.2, 8] } receiveShadow  />
