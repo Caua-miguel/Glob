@@ -1,169 +1,52 @@
+import React, { useMemo } from 'react';
+import { Center, shaderMaterial, useGLTF, useTexture } from '@react-three/drei';
+import { RigidBody } from '@react-three/rapier';
 import * as THREE from 'three'
-import { useEffect, useRef, useState } from 'react'
-import { RigidBody } from '@react-three/rapier'
-import { useFrame } from '@react-three/fiber'
-
-const cube = new THREE.BoxGeometry()
-
-const floorSpawn = new THREE.MeshStandardMaterial( { color:"limegreen"} )
-const floor = new THREE.MeshStandardMaterial( { color:"greenyellow"} )
-const obstacleMaterial = new THREE.MeshStandardMaterial( { color:"orangered"} )
-const wall = new THREE.MeshStandardMaterial( { color:"slategrey"} )
-const blockWall = new THREE.MeshStandardMaterial( { color:"gray"} )
-
- function Spawn( { position = [ 0, 0, 0 ]} )
-{
-    return <group position={ position }>
-                <mesh geometry={ cube } material={ floorSpawn } position={ [0, - 0.1, 0] } scale={ [8, 0.2, 8] } receiveShadow  />
-            </group>
-
-} 
-
- function SpikeTrap( { position = [ 0, 0, 0 ]} )
-{
-
-    const obstacle = useRef();
-    const speed = (Math.random() + 0.2 ) * (Math.random() < 0.5 ? -1 : 1 )
-
-    useFrame( (state) => 
-    {
-
-        const time = state.clock.getElapsedTime()
-
-        const rotation = new THREE.Quaternion()
-        rotation.setFromEuler( new THREE.Euler(0, time * speed, 0))
+import globVertexShader from './shaders/faseGlob/vertex.glsl';
+import globFragmentShader from './shaders/faseGlob/fragment.glsl'
 
 
-        obstacle.current.setNextKinematicRotation(rotation)
+export function Level() {
+    const { nodes } = useMemo(() => useGLTF('./model/portal.glb'), []);
 
-    }) 
-    return <group position={ position }>
-                <mesh geometry={ cube } material={ floor } position={ [ 0, - 0.1, 0 ] } scale={ [8, 0.2, 8] } receiveShadow />
-
-            <RigidBody ref={ obstacle } type='kinematicPosition'position={ [0, 0.3, 0] }>
-                <mesh geometry={ cube } material={ obstacleMaterial }  scale={ [ 7, 0.3, 0.3 ] } receiveShadow />
-            </RigidBody>
-
-            </group>
-
-}
-
- function TranslationSpike( { position = [ 0, 0, 0 ]} )
-{
-
-    const obstacle = useRef();
-    const timeTranslation = Math.random() * Math.PI * 2
-
-    useFrame( (state) => 
-    {
-
-        const time = state.clock.getElapsedTime()
-
-        const translation = Math.sin( time + timeTranslation) + 1.15
+    const bakedTexture = useTexture('./model/baked.jpg');
+    bakedTexture.flipY = false;
 
 
-        obstacle.current.setNextKinematicTranslation( { x: position[0], y: position[1] + translation, z: position[2]} )
-
-    }) 
-    return <group position={ position }>
-                <mesh geometry={ cube } material={ floorSpawn } position={ [ 0, - 0.1, 0 ] } scale={ [8, 0.2, 8] } receiveShadow />
-
-            <RigidBody ref={ obstacle } type='kinematicPosition'position={ [0, 0.3, 0] }>
-                <mesh geometry={ cube } material={ obstacleMaterial }  scale={ [ 7, 0.3, 0.3 ] } receiveShadow />
-            </RigidBody>
-
-            </group>
-}
-
- function Parkour( { position = [ 0, 0, 0 ]} )
-{
-
-    const randomBlockPosition = () => (Math.random() + 0.2) * (Math.random() < 0.5 ? -0.8 : 0.4);
-    
-    const block1 = useRef()
-    const block2 = useRef()
-
-    useEffect( () => 
-    {
-
-        block1.current.position.x = 2
-        block1.current.position.y = randomBlockPosition()
-        block1.current.position.z = -0.4
-
-        block2.current.position.x = -2
-        block2.current.position.y = randomBlockPosition()
-        block2.current.position.z = -0.4
-
-        if(block1.current.position.y < 0){
-                block2.current.position.y = 0.2
-            }else{
-                block2.current.position.y = -0.2
-            }
-            
-    },[])
-
-    return <group position={ position }>
-                <mesh geometry={ cube } material={ floor } position={ [ 0, - 0.1, 0 ] } scale={ [8, 0.2, 8] } receiveShadow />
-            
-            <RigidBody type='fixed' position={ [0, 1.5, 0] }>
-                <mesh geometry={ cube } material={ wall }  scale={ [ 8, 3, 0.3 ] } receiveShadow />
-                <mesh ref={block1} geometry={ cube } material={ blockWall }  scale={ [ 2, 0.4, 0.6 ] } receiveShadow />
-                <mesh ref={block2} geometry={ cube } material={ blockWall }  scale={ [ 2, 0.4, 0.6 ] } receiveShadow />
+    return (
+        <Center>
+            <RigidBody type="fixed" colliders="trimesh">
+                <mesh 
+                scale={5} 
+                geometry={nodes.baked.geometry}
+                >
+                    <meshBasicMaterial map={bakedTexture} />    
+                </mesh>
+                <mesh 
+                scale={6} 
+                geometry={nodes.portalLight.geometry}
+                position={[0,4,-9]}
+                rotation={nodes.portalLight.rotation}
+                > <shaderMaterial
+                        vertexShader={ globVertexShader }
+                        fragmentShader={ globFragmentShader }
+                        uniforms={
+                            {
+                                uTime: { value: 0 },
+                                uColorStart: { value: new THREE.Color('#ffffff')},
+                                uColorEnd: { value: new THREE.Color('#000000')}
+                            }}
+                /></mesh>
                 
-            </RigidBody>      
-
-            </group>
-}
-
-function TranslationAxe( { position = [ 0, 0, 0 ]} )
-{
-
-    const obstacle = useRef();
-    const timeTranslation = Math.random() * Math.PI * 2
-
-    useFrame( (state) => 
-    {
-
-        const time = state.clock.getElapsedTime()
-
-        const translation = (Math.sin( time + timeTranslation) + 1.15) * 2
-
-
-        obstacle.current.setNextKinematicTranslation( { x: position[0] - 2.5 + translation, y: position[1] + 0.75, z: position[2]} )
-
-    }) 
-    return <group position={ position }>
-                <mesh geometry={ cube } material={ floorSpawn } position={ [ 0, - 0.1, 0 ] } scale={ [8, 0.2, 8] } receiveShadow />
-
-            <RigidBody ref={ obstacle } type='kinematicPosition'position={ [0, 0.3, 0] }>
-                <mesh geometry={ cube } material={ obstacleMaterial }  scale={ [ 3, 1.5, 0.3 ] } receiveShadow />
             </RigidBody>
- 
-            </group>
+                
+            
+            <RigidBody type="fixed" colliders="trimesh">
+                <mesh position={[0,0,20]} scale={5} geometry={nodes.baked.geometry}>
+                    <meshBasicMaterial map={bakedTexture} />    
+                </mesh>
+            </RigidBody>
 
-}
-
-function End( { position = [ 0, 0, 0 ]} )
-{
-    return <group position={ position }>
-                <mesh geometry={ cube } material={ floor } position={ [0, - 0.1, 0] } scale={ [8, 0.2, 8] } receiveShadow  />
-            </group>
-
-} 
-
-
-export  function Level()
-{
-    return <>
-        
-        <Spawn position={ [ 0, 0, 0 ]} />
-        <SpikeTrap position={ [ 0, 0, 8] } />
-        <TranslationSpike position={ [ 0, 0, 16] } />
-        <Parkour position={ [ 0, 0, 24] } />
-        <TranslationAxe position={ [ 0, 0, 32] } />
-        <End position={ [ 0, 0, 40 ]} />
-
-        
-    </>
-   
+        </Center>
+    );
 }
